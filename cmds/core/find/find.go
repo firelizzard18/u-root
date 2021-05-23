@@ -17,6 +17,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
 	"strings"
@@ -32,7 +33,7 @@ var (
 	name      = flag.String("name", "", "glob for name")
 	long      = flag.Bool("l", false, "long listing")
 	debug     = flag.Bool("d", false, "Enable debugging in the find package")
-	fileTypes = map[string]os.FileMode{
+	fileTypes = map[string]fs.FileMode{
 		"f":         0,
 		"file":      0,
 		"d":         os.ModeDir,

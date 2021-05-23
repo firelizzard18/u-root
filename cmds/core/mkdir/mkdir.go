@@ -16,6 +16,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
 	"strconv"
@@ -33,7 +34,8 @@ var (
 	mode    = flag.String("m", "", "Directory mode")
 	mkall   = flag.Bool("p", false, "Make all needed directories in the path")
 	verbose = flag.Bool("v", false, "Print each directory as it is made")
-	f       = os.Mkdir
+
+	f func(name string, perm fs.FileMode) error = os.Mkdir
 )
 
 func init() {
