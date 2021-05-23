@@ -168,18 +168,29 @@ func BootGrubMode(devices block.BlockDevices, baseMountpoint string, guid string
 // The fourth parameter, `dryrun`, will not boot the found configurations if set
 // to true.
 func BootPathMode(devices block.BlockDevices, baseMountpoint string, guid string, dryrun bool) error {
-	mount, err := mountByGUID(devices, guid, baseMountpoint)
-	if err != nil {
-		return err
+	var cfg jsonboot.BootConfig
+	if guid == "" {
+		cfg = jsonboot.BootConfig{
+			Kernel:     *flagKernelPath,
+			Initramfs:  *flagInitramfsPath,
+			KernelArgs: *flagKernelCmdline,
+		}
+
+	} else {
+		mount, err := mountByGUID(devices, guid, baseMountpoint)
+		if err != nil {
+			return err
+		}
+
+		fullKernelPath := path.Join(mount.Path, *flagKernelPath)
+		fullInitramfsPath := path.Join(mount.Path, *flagInitramfsPath)
+		cfg = jsonboot.BootConfig{
+			Kernel:     fullKernelPath,
+			Initramfs:  fullInitramfsPath,
+			KernelArgs: *flagKernelCmdline,
+		}
 	}
 
-	fullKernelPath := path.Join(mount.Path, *flagKernelPath)
-	fullInitramfsPath := path.Join(mount.Path, *flagInitramfsPath)
-	cfg := jsonboot.BootConfig{
-		Kernel:     fullKernelPath,
-		Initramfs:  fullInitramfsPath,
-		KernelArgs: *flagKernelCmdline,
-	}
 	debug("Trying boot configuration %+v", cfg)
 	if dryrun {
 		log.Printf("Dry-run, will not actually boot")
