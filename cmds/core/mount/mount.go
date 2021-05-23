@@ -40,10 +40,20 @@ func (o *mountOptions) Set(value string) error {
 }
 
 var (
-	ro      = flag.Bool("r", false, "Read only mount")
-	fsType  = flag.String("t", "", "File system type")
-	bind    = flag.Bool("bind", false, "Mount with -o bind")
-	rbind   = flag.Bool("rbind", false, "Mount with -o rec,bind")
+	ro     = flag.Bool("r", false, "Read only mount")
+	fsType = flag.String("t", "", "File system type")
+	bind   = flag.Bool("bind", false, "Mount with -o bind")
+	rbind  = flag.Bool("rbind", false, "Mount with -o bind,rec")
+
+	makeShared      = flag.Bool("make-shared", false, "Mount with -o shared")
+	makeSlave       = flag.Bool("make-slave", false, "Mount with -o slave")
+	makePrivate     = flag.Bool("make-private", false, "Mount with -o private")
+	makeUnbindable  = flag.Bool("make-unbindable", false, "Mount with -o unbindable")
+	makeRShared     = flag.Bool("make-rshared", false, "Mount with -o shared,rec")
+	makeRSlave      = flag.Bool("make-rslave", false, "Mount with -o slave,rec")
+	makeRPrivate    = flag.Bool("make-rprivate", false, "Mount with -o private,rec")
+	makeRUnbindable = flag.Bool("make-runbindable", false, "Mount with -o unbindable,rec")
+
 	options mountOptions
 )
 
@@ -138,10 +148,22 @@ func main() {
 	if *ro {
 		flags |= unix.MS_RDONLY
 	}
-	if *bind {
+	if *bind || *rbind {
 		flags |= unix.MS_BIND
 	}
-	if *rbind {
+	if *makeShared || *makeRShared {
+		flags |= unix.MS_SHARED
+	}
+	if *makeSlave || *makeRSlave {
+		flags |= unix.MS_SLAVE
+	}
+	if *makePrivate || *makeRPrivate {
+		flags |= unix.MS_PRIVATE
+	}
+	if *makeUnbindable || *makeRUnbindable {
+		flags |= unix.MS_UNBINDABLE
+	}
+	if *rbind || *makeRShared || *makeRSlave || *makeRPrivate || *makeRUnbindable {
 		flags |= unix.MS_BIND | unix.MS_REC
 	}
 	if *fsType == "" {
