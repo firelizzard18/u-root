@@ -42,6 +42,8 @@ func (o *mountOptions) Set(value string) error {
 var (
 	ro      = flag.Bool("r", false, "Read only mount")
 	fsType  = flag.String("t", "", "File system type")
+	bind    = flag.Bool("bind", false, "Mount with -o bind")
+	rbind   = flag.Bool("rbind", false, "Mount with -o rec,bind")
 	options mountOptions
 )
 
@@ -96,16 +98,14 @@ func informIfUnknownFS(originFS string) {
 }
 
 func main() {
-	if len(os.Args) == 1 {
-		n := []string{"/proc/self/mounts", "/proc/mounts", "/etc/mtab"}
-		for _, p := range n {
-			if b, err := ioutil.ReadFile(p); err == nil {
-				fmt.Print(string(b))
-				os.Exit(0)
-			}
+	n := []string{"/proc/self/mounts", "/proc/mounts", "/etc/mtab"}
+	for _, p := range n {
+		if b, err := ioutil.ReadFile(p); err == nil {
+			fmt.Print(string(b))
+			os.Exit(0)
 		}
-		log.Fatalf("Could not read %s to get namespace", n)
 	}
+
 	flag.Parse()
 	if len(flag.Args()) < 2 {
 		flag.Usage()
@@ -113,7 +113,10 @@ func main() {
 	}
 	a := flag.Args()
 	dev := a[0]
-	path := a[1]
+	var path string
+	if len(a) > 1 {
+		path = a[1]
+	}
 	var flags uintptr
 	var data []string
 	var err error
@@ -134,6 +137,12 @@ func main() {
 	}
 	if *ro {
 		flags |= unix.MS_RDONLY
+	}
+	if *bind {
+		flags |= unix.MS_BIND
+	}
+	if *rbind {
+		flags |= unix.MS_BIND | unix.MS_REC
 	}
 	if *fsType == "" {
 		if _, err := mount.TryMount(dev, path, strings.Join(data, ","), flags); err != nil {
